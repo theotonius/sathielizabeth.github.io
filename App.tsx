@@ -82,22 +82,32 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
   );
 };
 
-// --- Main App ---
-
 export default function App() {
   const [data, setData] = useState<SiteData>(INITIAL_DATA);
   const [isAdmin, setIsAdmin] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  // Load persisted data
+  // Load persisted data safely to prevent blank screen
   useEffect(() => {
     const saved = localStorage.getItem('marketpro_data');
     if (saved) {
       try {
-        setData(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // Merge saved data with INITIAL_DATA to ensure all fields (like testimonials) exist
+        setData({
+          ...INITIAL_DATA,
+          ...parsed,
+          hero: { ...INITIAL_DATA.hero, ...parsed.hero },
+          about: { ...INITIAL_DATA.about, ...parsed.about },
+          // Ensure arrays are merged or defaulted correctly
+          services: parsed.services?.length ? parsed.services : INITIAL_DATA.services,
+          projects: parsed.projects?.length ? parsed.projects : INITIAL_DATA.projects,
+          testimonials: parsed.testimonials?.length ? parsed.testimonials : INITIAL_DATA.testimonials,
+        });
       } catch (e) {
         console.error("Failed to load saved data", e);
+        // If parsing fails, stick with INITIAL_DATA
       }
     }
   }, []);
@@ -136,7 +146,7 @@ export default function App() {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
               <Sparkles size={14} />
-              Professional Digital Marketer
+              Digital Marketing Specialist
             </div>
             <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-slate-900">
               {isAdmin ? (
@@ -199,7 +209,7 @@ export default function App() {
             <div className="relative glass p-6 rounded-3xl shadow-2xl">
               <div className="mb-6">
                 <h3 className="text-sm font-bold mb-4 flex items-center gap-2 uppercase tracking-widest text-slate-500">
-                  <Globe className="text-indigo-600" size={18} /> Campaign Performance
+                  <Globe className="text-indigo-600" size={18} /> Performance Analytics
                 </h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -234,11 +244,11 @@ export default function App() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Premium Solutions</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-lg">Targeted digital marketing expert services designed to drive high-intent conversion and scalable growth.</p>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">আপনার ব্যবসার উন্নতির জন্য বিশেষায়িত ডিজিটাল মার্কেটিং সেবাসমূহ।</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {data.services.map((service) => (
+            {data.services?.map((service) => (
               <div key={service.id} className="bg-slate-50 p-8 rounded-3xl border border-slate-200 group relative hover:-translate-y-2 transition-all duration-300">
                 <div className="bg-white w-14 h-14 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                   {IconMap[service.icon] || <Megaphone />}
@@ -260,18 +270,6 @@ export default function App() {
                 )}
               </div>
             ))}
-            {isAdmin && (
-              <button 
-                onClick={() => {
-                  const newS: Service = { id: Date.now().toString(), title: "New Service", description: "Describe your service details here.", icon: "Megaphone" };
-                  saveToStorage({ ...data, services: [...data.services, newS] });
-                }}
-                className="border-2 border-dashed border-indigo-200 rounded-3xl flex flex-col items-center justify-center gap-3 text-indigo-400 hover:text-indigo-600 hover:border-indigo-400 p-8 transition-colors bg-indigo-50/30"
-              >
-                <Plus size={32} />
-                <span className="font-bold">Add New Service</span>
-              </button>
-            )}
           </div>
         </div>
       </section>
@@ -282,13 +280,12 @@ export default function App() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
             <div>
               <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Featured Projects</h2>
-              <p className="text-slate-600 text-lg">Real results achieved for real clients through strategic execution.</p>
+              <p className="text-slate-600 text-lg">আমরা যেসব ব্র্যান্ডের জন্য সফল ফলাফল নিয়ে এসেছি।</p>
             </div>
-            <a href="#" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:gap-3 transition-all text-sm">View All Case Studies <TrendingUp size={16} /></a>
           </div>
 
           <div className="grid md:grid-cols-2 gap-10">
-            {data.projects.map((project) => (
+            {data.projects?.map((project) => (
               <div key={project.id} className="overflow-hidden rounded-[2.5rem] group shadow-xl relative aspect-video bg-slate-200">
                 <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent p-8 md:p-12 flex flex-col justify-end">
@@ -299,18 +296,6 @@ export default function App() {
                     <span className="text-white font-medium text-sm">Outcome: {project.result}</span>
                   </div>
                 </div>
-                {isAdmin && (
-                   <button 
-                   onClick={(e) => {
-                     e.preventDefault();
-                     const newProjects = data.projects.filter(p => p.id !== project.id);
-                     saveToStorage({ ...data, projects: newProjects });
-                   }}
-                   className="absolute top-6 right-6 bg-white/20 hover:bg-red-500 p-3 rounded-full text-white backdrop-blur-xl border border-white/30 transition-colors"
-                 >
-                   <Trash2 size={20} />
-                 </button>
-                )}
               </div>
             ))}
           </div>
@@ -321,12 +306,12 @@ export default function App() {
       <section id="testimonials" className="py-24 px-4 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">What Clients Say</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-lg">Real results from real business owners we've helped scale through digital marketing excellence.</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Client Success Stories</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">আমাদের ক্লায়েন্টদের সন্তুষ্টিই আমাদের কাজের প্রধান অনুপ্রেরণা।</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {data.testimonials.map((testimonial) => (
+            {data.testimonials?.map((testimonial) => (
               <div key={testimonial.id} className="bg-slate-50 p-8 rounded-[2rem] border border-slate-200 flex flex-col h-full relative group">
                 <div className="text-indigo-600 mb-6">
                   <Quote size={40} fill="currentColor" className="opacity-10" />
@@ -345,60 +330,12 @@ export default function App() {
                 <div className="flex items-center gap-4 mt-6 pt-6 border-t border-slate-200">
                   <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full bg-slate-300 object-cover border-2 border-white shadow-sm" />
                   <div>
-                    {isAdmin ? (
-                      <div className="space-y-1">
-                        <input 
-                          type="text" 
-                          value={testimonial.name} 
-                          onChange={(e) => handleUpdateTestimonial(testimonial.id, 'name', e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs font-bold"
-                        />
-                        <input 
-                          type="text" 
-                          value={testimonial.role} 
-                          onChange={(e) => handleUpdateTestimonial(testimonial.id, 'role', e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-500"
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <h4 className="font-bold text-slate-900">{testimonial.name}</h4>
-                        <p className="text-sm text-slate-500">{testimonial.role}</p>
-                      </>
-                    )}
+                    <h4 className="font-bold text-slate-900">{testimonial.name}</h4>
+                    <p className="text-sm text-slate-500">{testimonial.role}</p>
                   </div>
                 </div>
-                {isAdmin && (
-                  <button 
-                    onClick={() => {
-                      const newList = data.testimonials.filter(t => t.id !== testimonial.id);
-                      saveToStorage({ ...data, testimonials: newList });
-                    }}
-                    className="absolute top-4 right-4 text-red-400 hover:text-red-600 p-2 bg-white rounded-full shadow-sm"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
               </div>
             ))}
-            {isAdmin && (
-              <button 
-                onClick={() => {
-                  const newT: Testimonial = { 
-                    id: Date.now().toString(), 
-                    name: "Client Name", 
-                    role: "CEO, Company", 
-                    feedback: "Add your client's success story here.", 
-                    avatar: `https://i.pravatar.cc/150?u=${Date.now()}`
-                  };
-                  saveToStorage({ ...data, testimonials: [...data.testimonials, newT] });
-                }}
-                className="border-2 border-dashed border-indigo-200 rounded-[2rem] flex flex-col items-center justify-center gap-3 text-indigo-400 hover:text-indigo-600 hover:border-indigo-400 p-8 transition-colors bg-indigo-50/30 min-h-[300px]"
-              >
-                <Plus size={32} />
-                <span className="font-bold">Add Testimonial</span>
-              </button>
-            )}
           </div>
         </div>
       </section>
@@ -406,7 +343,7 @@ export default function App() {
       {/* About Section */}
       <section id="about" className="py-24 px-4 bg-slate-50">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-slate-900">About Me</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-slate-900">About Our Expert</h2>
           <div className="text-xl text-slate-600 leading-relaxed space-y-6">
             {isAdmin ? (
                <textarea 
@@ -427,7 +364,7 @@ export default function App() {
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-6">Ready to scale your business?</h2>
           <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
-            Let's discuss your growth strategy. I'll help you navigate the digital landscape with confidence.
+            আপনার গ্রোথ স্ট্রেটেজি নিয়ে আজই আলোচনা করুন। আমরা আপনাকে সঠিক দিকনির্দেশনা দিতে প্রস্তুত।
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <button className="bg-white text-indigo-600 px-10 py-5 rounded-full font-bold text-lg hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-1 active:scale-95">
@@ -449,7 +386,7 @@ export default function App() {
               <span className="text-2xl font-bold tracking-tight">MarketPro</span>
             </div>
             <p className="text-sm leading-relaxed">
-              Your trusted partner for digital growth. We specialize in turning data into revenue through smart marketing strategies.
+              আপনার বিশ্বস্ত ডিজিটাল মার্কেটিং পার্টনার। আমরা ডেটা এবং সঠিক পরিকল্পনার মাধ্যমে আপনার ব্যবসাকে বড় করতে সাহায্য করি।
             </p>
             <div className="flex gap-4">
               <a href="#" className="bg-slate-800 p-3 rounded-xl hover:text-white hover:bg-slate-700 transition-all"><Facebook size={20} /></a>
@@ -463,25 +400,25 @@ export default function App() {
             <h4 className="text-white font-bold mb-6 text-lg">Quick Links</h4>
             <ul className="space-y-3 text-sm">
               <li><a href="#services" className="hover:text-white transition-colors">Services</a></li>
-              <li><a href="#projects" className="hover:text-white transition-colors">Case Studies</a></li>
+              <li><a href="#projects" className="hover:text-white transition-colors">Projects</a></li>
               <li><a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-white font-bold mb-6 text-lg">Our Services</h4>
+            <h4 className="text-white font-bold mb-6 text-lg">Premium Services</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Social Media Ads</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Search Engine Optimization</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Email Marketing</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Content Creation</a></li>
+              <li>Email Marketing</li>
+              <li>SEO & SEM</li>
+              <li>SMM Strategy</li>
+              <li>Ecommerce Growth</li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-white font-bold mb-6 text-lg">Newsletter</h4>
-            <p className="text-sm mb-6">Stay ahead with the latest marketing trends.</p>
+            <p className="text-sm mb-6">Stay updated with marketing trends.</p>
             <div className="flex flex-col gap-3">
               <input type="email" placeholder="Email Address" className="bg-slate-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-indigo-500 outline-none w-full text-white" />
               <button className="bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/10">Subscribe</button>
@@ -489,7 +426,7 @@ export default function App() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto border-t border-slate-800 mt-16 pt-8 text-center text-xs tracking-widest uppercase">
-          © 2024 MarketPro - Digital Marketing Agency. All Rights Reserved.
+          © 2024 MarketPro - All Rights Reserved.
         </div>
       </footer>
 
@@ -502,7 +439,7 @@ export default function App() {
             </div>
             <div>
               <p className="font-extrabold text-slate-900">Admin Editing Mode</p>
-              <p className="text-xs text-slate-500 font-medium">Changes are saved automatically to your local storage.</p>
+              <p className="text-xs text-slate-500 font-medium">আপনার পরিবর্তনগুলো অটোমেটিক সেভ হচ্ছে।</p>
             </div>
           </div>
           <button 
@@ -523,7 +460,7 @@ export default function App() {
 function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-    { role: 'ai', text: "Hello! I'm Tanvir's AI assistant. How can I help you grow your business today?" }
+    { role: 'ai', text: "হ্যালো! আমি তানভীরের AI অ্যাসিস্ট্যান্ট। আমি আপনাকে কীভাবে সাহায্য করতে পারি?" }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -535,7 +472,7 @@ function AIChatWidget() {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
     
-    const copy = await generateMarketingCopy(userMsg, "Explain digital marketing concepts or services");
+    const copy = await generateMarketingCopy(userMsg, "Marketing advice or strategy explanation");
     setMessages(prev => [...prev, { role: 'ai', text: copy || '' }]);
     setLoading(false);
   };
@@ -550,8 +487,7 @@ function AIChatWidget() {
                 <Sparkles size={20} />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-sm">MarketPro AI Assistant</span>
-                <span className="text-[10px] uppercase tracking-widest opacity-80">Online & Active</span>
+                <span className="font-bold text-sm">Expert AI Assistant</span>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-2 rounded-full transition-colors"><X size={20} /></button>
@@ -566,7 +502,7 @@ function AIChatWidget() {
             ))}
             {loading && (
               <div className="flex gap-2 items-center text-xs text-indigo-400 font-bold animate-pulse">
-                <Sparkles size={14} /> AI is thinking...
+                <Sparkles size={14} /> AI thinking...
               </div>
             )}
           </div>
@@ -575,7 +511,7 @@ function AIChatWidget() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && handleSend()}
-              placeholder="Ask anything about marketing..." 
+              placeholder="আপনার প্রশ্নটি লিখুন..." 
               className="flex-1 bg-slate-50 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 ring-indigo-500 outline-none shadow-inner" 
             />
             <button 
