@@ -4,11 +4,11 @@ import {
   Menu, X, Facebook, Instagram, Linkedin, Twitter, 
   Settings, Save, Plus, Trash2, Sparkles, TrendingUp,
   Layout, MessageSquare, Briefcase, User, Megaphone, Search, PenTool,
-  Globe, Mail, BarChart, Target, Users, ShoppingBag
+  Globe, Mail, BarChart, Target, Users, ShoppingBag, Quote
 } from 'lucide-react';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { INITIAL_DATA, MOCK_CHART_DATA } from './constants';
-import { SiteData, Service, Project } from './types';
+import { SiteData, Service, Project, Testimonial } from './types';
 import { generateMarketingCopy, getSiteUpdateSuggestion } from './services/gemini';
 
 // --- Sub-components ---
@@ -45,6 +45,7 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
             <a href="#home" className="text-sm font-medium hover:text-indigo-600 transition-colors">Home</a>
             <a href="#services" className="text-sm font-medium hover:text-indigo-600 transition-colors">Services</a>
             <a href="#projects" className="text-sm font-medium hover:text-indigo-600 transition-colors">Projects</a>
+            <a href="#testimonials" className="text-sm font-medium hover:text-indigo-600 transition-colors">Testimonials</a>
             <a href="#about" className="text-sm font-medium hover:text-indigo-600 transition-colors">About</a>
             <button 
               onClick={onAdminToggle}
@@ -68,6 +69,7 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
           <a href="#home" className="block px-4 py-2 hover:bg-indigo-50 rounded">Home</a>
           <a href="#services" className="block px-4 py-2 hover:bg-indigo-50 rounded">Services</a>
           <a href="#projects" className="block px-4 py-2 hover:bg-indigo-50 rounded">Projects</a>
+          <a href="#testimonials" className="block px-4 py-2 hover:bg-indigo-50 rounded">Testimonials</a>
           <button 
             onClick={() => { onAdminToggle(); setIsOpen(false); }}
             className="flex w-full items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg"
@@ -108,6 +110,13 @@ export default function App() {
   const handleUpdateHero = (field: keyof SiteData['hero'], value: string) => {
     const newData = { ...data, hero: { ...data.hero, [field]: value } };
     saveToStorage(newData);
+  };
+
+  const handleUpdateTestimonial = (id: string, field: keyof Testimonial, value: string) => {
+    const newTestimonials = data.testimonials.map(t => 
+      t.id === id ? { ...t, [field]: value } : t
+    );
+    saveToStorage({ ...data, testimonials: newTestimonials });
   };
 
   const handleAiSuggestion = async (type: string) => {
@@ -308,8 +317,94 @@ export default function App() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-24 px-4 bg-white border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">What Clients Say</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">Real results from real business owners we've helped scale through digital marketing excellence.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {data.testimonials.map((testimonial) => (
+              <div key={testimonial.id} className="bg-slate-50 p-8 rounded-[2rem] border border-slate-200 flex flex-col h-full relative group">
+                <div className="text-indigo-600 mb-6">
+                  <Quote size={40} fill="currentColor" className="opacity-10" />
+                </div>
+                <div className="flex-1">
+                  {isAdmin ? (
+                    <textarea 
+                      value={testimonial.feedback}
+                      onChange={(e) => handleUpdateTestimonial(testimonial.id, 'feedback', e.target.value)}
+                      className="w-full bg-white border-2 border-indigo-100 rounded-xl p-3 text-sm focus:border-indigo-500 outline-none h-32"
+                    />
+                  ) : (
+                    <p className="text-slate-700 leading-relaxed italic mb-8">"{testimonial.feedback}"</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 mt-6 pt-6 border-t border-slate-200">
+                  <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full bg-slate-300 object-cover border-2 border-white shadow-sm" />
+                  <div>
+                    {isAdmin ? (
+                      <div className="space-y-1">
+                        <input 
+                          type="text" 
+                          value={testimonial.name} 
+                          onChange={(e) => handleUpdateTestimonial(testimonial.id, 'name', e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs font-bold"
+                        />
+                        <input 
+                          type="text" 
+                          value={testimonial.role} 
+                          onChange={(e) => handleUpdateTestimonial(testimonial.id, 'role', e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-500"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <h4 className="font-bold text-slate-900">{testimonial.name}</h4>
+                        <p className="text-sm text-slate-500">{testimonial.role}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {isAdmin && (
+                  <button 
+                    onClick={() => {
+                      const newList = data.testimonials.filter(t => t.id !== testimonial.id);
+                      saveToStorage({ ...data, testimonials: newList });
+                    }}
+                    className="absolute top-4 right-4 text-red-400 hover:text-red-600 p-2 bg-white rounded-full shadow-sm"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {isAdmin && (
+              <button 
+                onClick={() => {
+                  const newT: Testimonial = { 
+                    id: Date.now().toString(), 
+                    name: "Client Name", 
+                    role: "CEO, Company", 
+                    feedback: "Add your client's success story here.", 
+                    avatar: `https://i.pravatar.cc/150?u=${Date.now()}`
+                  };
+                  saveToStorage({ ...data, testimonials: [...data.testimonials, newT] });
+                }}
+                className="border-2 border-dashed border-indigo-200 rounded-[2rem] flex flex-col items-center justify-center gap-3 text-indigo-400 hover:text-indigo-600 hover:border-indigo-400 p-8 transition-colors bg-indigo-50/30 min-h-[300px]"
+              >
+                <Plus size={32} />
+                <span className="font-bold">Add Testimonial</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
-      <section id="about" className="py-24 px-4 bg-white">
+      <section id="about" className="py-24 px-4 bg-slate-50">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-slate-900">About Me</h2>
           <div className="text-xl text-slate-600 leading-relaxed space-y-6">
@@ -317,7 +412,7 @@ export default function App() {
                <textarea 
                value={data.about.text} 
                onChange={(e) => saveToStorage({ ...data, about: { ...data.about, text: e.target.value } })}
-               className="w-full h-40 bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl focus:border-indigo-600 outline-none"
+               className="w-full h-40 bg-white border-2 border-indigo-100 p-4 rounded-2xl focus:border-indigo-600 outline-none shadow-sm"
              />
             ) : (
               <p>{data.about.text}</p>
@@ -335,7 +430,7 @@ export default function App() {
             Let's discuss your growth strategy. I'll help you navigate the digital landscape with confidence.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <button className="bg-white text-indigo-600 px-10 py-5 rounded-full font-bold text-lg hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-1">
+            <button className="bg-white text-indigo-600 px-10 py-5 rounded-full font-bold text-lg hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-1 active:scale-95">
               Book a Strategy Call
             </button>
             <button className="bg-transparent border-2 border-indigo-400 text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-white/10 transition-all">
@@ -369,7 +464,7 @@ export default function App() {
             <ul className="space-y-3 text-sm">
               <li><a href="#services" className="hover:text-white transition-colors">Services</a></li>
               <li><a href="#projects" className="hover:text-white transition-colors">Case Studies</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              <li><a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
@@ -388,8 +483,8 @@ export default function App() {
             <h4 className="text-white font-bold mb-6 text-lg">Newsletter</h4>
             <p className="text-sm mb-6">Stay ahead with the latest marketing trends.</p>
             <div className="flex flex-col gap-3">
-              <input type="email" placeholder="Email Address" className="bg-slate-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-indigo-500 outline-none w-full" />
-              <button className="bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all">Subscribe</button>
+              <input type="email" placeholder="Email Address" className="bg-slate-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-indigo-500 outline-none w-full text-white" />
+              <button className="bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/10">Subscribe</button>
             </div>
           </div>
         </div>

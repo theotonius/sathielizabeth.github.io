@@ -9,7 +9,7 @@ export const INITIAL_DATA: SiteData = {
     cta: "Get Free Consultation"
   },
   about: {
-    text: "Over the past 5 years, I've worked with diverse clients globally. My primary focus is to maximize your Return on Investment (ROI) through performance-driven marketing.",
+    text: "Over the past 5 years, I've worked with diverse clients globally. My primary focus is to maximize your Return on Investment (ROI) through performance-driven marketing strategies that actually move the needle.",
     stats: [
       { label: "Successful Projects", value: "150+" },
       { label: "Ad Spend Managed", value: "$500k+" },
@@ -83,20 +83,29 @@ export const INITIAL_DATA: SiteData = {
       category: "Social Media",
       image: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80",
       result: "250% Engagement Boost"
+    }
+  ],
+  testimonials: [
+    {
+      id: "t1",
+      name: "Sarah Jenkins",
+      role: "CEO, GlowBeauty",
+      feedback: "Tanvir completely transformed our online presence. Our conversion rate tripled within three months of working with him! His approach to data is truly unique.",
+      avatar: "https://i.pravatar.cc/150?u=sarah"
     },
     {
-      id: "p5",
-      title: "SaaS Subscription Scale",
-      category: "Growth Marketing",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-      result: "12k Monthly Active Users"
+      id: "t2",
+      name: "Mark Thompson",
+      role: "Marketing Director, TechFlow",
+      feedback: "The level of insight provided through the analytics dashboards was a game-changer for our quarterly planning. We finally know where our money goes.",
+      avatar: "https://i.pravatar.cc/150?u=mark"
     },
     {
-      id: "p6",
-      title: "Email Funnel Optimization",
-      category: "Retention",
-      image: "https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=800&q=80",
-      result: "22% Cart Recovery Rate"
+      id: "t3",
+      name: "Elena Rodriguez",
+      role: "Founder, EcoStore",
+      feedback: "Strategic, professional, and results-oriented. The lead generation campaign surpassed all our expectations. Tanvir is a true partner in our growth.",
+      avatar: "https://i.pravatar.cc/150?u=elena"
     }
   ]
 };

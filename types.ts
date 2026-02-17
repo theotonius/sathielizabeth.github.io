@@ -14,6 +14,14 @@ export interface Project {
   result: string;
 }
 
+export interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  feedback: string;
+  avatar: string;
+}
+
 export interface SiteData {
   hero: {
     name: string;
@@ -27,6 +35,7 @@ export interface SiteData {
   };
   services: Service[];
   projects: Project[];
+  testimonials: Testimonial[];
 }
 
 export interface ChartData {
