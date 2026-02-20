@@ -2,29 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Menu, X, Facebook, Instagram, Linkedin, Twitter, 
-  Settings, Save, Plus, Trash2, Sparkles, TrendingUp,
-  Globe, Mail, BarChart, Target, Users, ShoppingBag, Quote, MessageSquare, Megaphone, Search, PenTool, Send, CheckCircle
+  Sparkles, TrendingUp,
+  Globe, Mail, BarChart, Target, Users, ShoppingBag, Quote, MessageSquare, Megaphone, Search, PenTool, Send, CheckCircle,
+  Zap, Award, Smile, Star, Layout, FileText, Phone, MapPin, Camera, Video, Smartphone, Laptop, Cpu, Layers, PieChart
 } from 'lucide-react';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { INITIAL_DATA, MOCK_CHART_DATA } from './constants';
 import { SiteData, Service, Project, Testimonial } from './types';
-import { generateMarketingCopy, getSiteUpdateSuggestion } from './services/gemini';
+import { generateMarketingCopy } from './services/gemini';
 
 // --- Icon Mapping ---
-const IconMap: Record<string, React.ReactNode> = {
-  Megaphone: <Megaphone className="w-6 h-6" />,
-  Search: <Search className="w-6 h-6" />,
-  PenTool: <PenTool className="w-6 h-6" />,
-  Globe: <Globe className="w-6 h-6" />,
-  Mail: <Mail className="w-6 h-6" />,
-  BarChart: <BarChart className="w-6 h-6" />,
-  Target: <Target className="w-6 h-6" />,
-  Users: <Users className="w-6 h-6" />,
-  ShoppingBag: <ShoppingBag className="w-6 h-6" />,
+const IconMap: Record<string, React.ElementType> = {
+  Megaphone, Search, PenTool, Globe, Mail, BarChart, Target, Users, ShoppingBag,
+  Zap, Award, Smile, Star, Layout, FileText, Phone, MapPin, Camera, Video, 
+  Smartphone, Laptop, Cpu, Layers, PieChart, TrendingUp
 };
 
 // --- Sub-components ---
-const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
+const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -46,13 +41,6 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
             <a href="#projects" className="text-sm font-medium hover:text-indigo-600 transition-colors">Projects</a>
             <a href="#testimonials" className="text-sm font-medium hover:text-indigo-600 transition-colors">Testimonials</a>
             <a href="#about" className="text-sm font-medium hover:text-indigo-600 transition-colors">About</a>
-            <button 
-              onClick={onAdminToggle}
-              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full hover:bg-slate-800 transition-all text-sm shadow-sm"
-            >
-              <Settings size={16} />
-              Admin
-            </button>
           </div>
 
           <div className="md:hidden">
@@ -63,7 +51,6 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
         </div>
       </div>
       
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden glass border-t border-slate-200 p-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
           <a href="#home" className="block px-4 py-3 hover:bg-indigo-50 rounded-xl font-medium" onClick={() => setIsOpen(false)}>Home</a>
@@ -71,12 +58,6 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
           <a href="#projects" className="block px-4 py-3 hover:bg-indigo-50 rounded-xl font-medium" onClick={() => setIsOpen(false)}>Projects</a>
           <a href="#testimonials" className="block px-4 py-3 hover:bg-indigo-50 rounded-xl font-medium" onClick={() => setIsOpen(false)}>Testimonials</a>
           <a href="#about" className="block px-4 py-3 hover:bg-indigo-50 rounded-xl font-medium" onClick={() => setIsOpen(false)}>About</a>
-          <button 
-            onClick={() => { onAdminToggle(); setIsOpen(false); }}
-            className="flex w-full items-center gap-3 bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold mt-4"
-          >
-            <Settings size={18} /> Admin Mode
-          </button>
         </div>
       )}
     </nav>
@@ -86,66 +67,20 @@ const Navbar: React.FC<{ onAdminToggle: () => void }> = ({ onAdminToggle }) => {
 // --- Main App ---
 export default function App() {
   const [data, setData] = useState<SiteData>(INITIAL_DATA);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
 
-  // Robust persistence layer
   useEffect(() => {
     const saved = localStorage.getItem('marketpro_data');
     if (!saved) return;
-    
     try {
       const parsed = JSON.parse(saved);
       if (parsed && typeof parsed === 'object') {
-        setData(prev => ({
-          ...INITIAL_DATA,
-          ...parsed,
-          hero: { ...INITIAL_DATA.hero, ...(parsed.hero || {}) },
-          about: { ...INITIAL_DATA.about, ...(parsed.about || {}) },
-          services: Array.isArray(parsed.services) && parsed.services.length ? parsed.services : INITIAL_DATA.services,
-          projects: Array.isArray(parsed.projects) && parsed.projects.length ? parsed.projects : INITIAL_DATA.projects,
-          testimonials: Array.isArray(parsed.testimonials) && parsed.testimonials.length ? parsed.testimonials : INITIAL_DATA.testimonials,
-        }));
+        setData(prev => ({ ...INITIAL_DATA, ...parsed }));
       }
     } catch (e) {
-      console.error("Critical error loading saved data. Resetting to initial.", e);
+      console.error("Critical error loading saved data.", e);
     }
   }, []);
-
-  const saveToStorage = (newData: SiteData) => {
-    setData(newData);
-    try {
-      localStorage.setItem('marketpro_data', JSON.stringify(newData));
-    } catch (e) {
-      console.error("Failed to save to localStorage", e);
-    }
-  };
-
-  const handleUpdateHero = (field: keyof SiteData['hero'], value: string) => {
-    const newData = { ...data, hero: { ...data.hero, [field]: value } };
-    saveToStorage(newData);
-  };
-
-  const handleUpdateTestimonial = (id: string, field: keyof Testimonial, value: string) => {
-    const newTestimonials = (data.testimonials || []).map(t => 
-      t.id === id ? { ...t, [field]: value } : t
-    );
-    saveToStorage({ ...data, testimonials: newTestimonials });
-  };
-
-  const handleAiSuggestion = async (type: string) => {
-    setAiLoading(true);
-    try {
-      const results = await getSiteUpdateSuggestion(data.hero, type);
-      setSuggestions(results);
-    } catch (e) {
-      console.error("AI Error:", e);
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,74 +94,33 @@ export default function App() {
 
   return (
     <div className="min-h-screen selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden">
-      <Navbar onAdminToggle={() => setIsAdmin(!isAdmin)} />
+      <Navbar />
 
       {/* Hero Section */}
-      <section id="home" className="pt-24 pb-16 md:pt-40 md:pb-24 px-4 overflow-hidden">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <section id="home" className="relative pt-24 pb-16 md:pt-40 md:pb-24 px-4 overflow-hidden bg-slate-50">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
           <div className="space-y-6 md:space-y-8 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest mx-auto md:mx-0">
+            <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest mx-auto md:mx-0 shadow-sm">
               <Sparkles size={14} />
               Digital Marketing Expert
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-extrabold leading-tight text-slate-900">
-              {isAdmin ? (
-                <input 
-                  type="text" 
-                  value={data.hero?.title || ""} 
-                  onChange={(e) => handleUpdateHero('title', e.target.value)}
-                  className="w-full bg-slate-100 border-2 border-indigo-200 rounded-lg p-2 focus:border-indigo-600 outline-none"
-                />
-              ) : (data.hero?.title || "Welcome")}
+              {data.hero?.title || "Welcome"}
             </h1>
-            <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-lg mx-auto md:mx-0">
-              {isAdmin ? (
-                <textarea 
-                  value={data.hero?.description || ""} 
-                  onChange={(e) => handleUpdateHero('description', e.target.value)}
-                  className="w-full h-32 bg-slate-100 border-2 border-indigo-100 p-2 rounded-lg focus:border-indigo-600 outline-none"
-                />
-              ) : (data.hero?.description || "")}
+            <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-lg mx-auto md:mx-0 font-medium">
+              {data.hero?.description || ""}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <button className="bg-indigo-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
+              <button className="bg-indigo-600 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
                 {data.hero?.cta || "Get Started"}
                 <TrendingUp size={20} />
               </button>
-              {isAdmin && (
-                <button 
-                  onClick={() => handleAiSuggestion('hero')}
-                  disabled={aiLoading}
-                  className="bg-purple-100 text-purple-700 px-6 py-4 rounded-full font-bold hover:bg-purple-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50 w-full sm:w-auto"
-                >
-                  <Sparkles size={20} /> {aiLoading ? 'Thinking...' : 'AI Suggestions'}
-                </button>
-              )}
             </div>
-            
-            {isAdmin && suggestions.length > 0 && (
-              <div className="bg-white p-4 rounded-xl border-2 border-purple-200 shadow-xl mt-4 animate-in fade-in slide-in-from-top-4 duration-300 text-left">
-                <p className="font-bold text-purple-600 mb-2 flex items-center gap-2 text-sm">
-                  <Sparkles size={16} /> AI Headlines:
-                </p>
-                <div className="space-y-2">
-                  {suggestions.map((s, idx) => (
-                    <div 
-                      key={idx} 
-                      className="p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 transition-all text-xs sm:text-sm"
-                      onClick={() => { handleUpdateHero('title', s); setSuggestions([]); }}
-                    >
-                      {s}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
           
           <div className="relative mt-8 md:mt-0">
-            <div className="absolute -top-10 -left-10 w-48 h-48 md:w-72 md:h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-            <div className="absolute -bottom-10 -right-10 w-48 h-48 md:w-72 md:h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+            <div className="absolute -top-10 -left-10 w-48 h-48 md:w-72 md:h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 md:w-72 md:h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
             <div className="relative glass p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-white/40">
               <div className="mb-4 md:mb-6">
                 <h3 className="text-[10px] md:text-xs font-bold mb-4 flex items-center gap-2 uppercase tracking-widest text-slate-500">
@@ -238,9 +132,7 @@ export default function App() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} tick={{fill: '#64748b'}} />
                       <YAxis hide />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px' }}
-                      />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px' }} />
                       <Bar dataKey="reach" fill="#6366f1" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="conversions" fill="#a855f7" radius={[4, 4, 0, 0]} />
                     </RechartsBarChart>
@@ -249,7 +141,7 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 {(data.about?.stats || []).map((stat, i) => (
-                  <div key={i} className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm">
+                  <div key={i} className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white shadow-sm">
                     <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{stat.label}</p>
                     <p className="text-xl md:text-2xl font-bold text-slate-900">{stat.value}</p>
                   </div>
@@ -269,28 +161,18 @@ export default function App() {
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {(data.services || []).map((service) => (
-              <div key={service.id} className="bg-slate-50 p-6 md:p-10 rounded-[2rem] border border-slate-200 group relative hover:-translate-y-2 transition-all duration-300 hover:shadow-xl flex flex-col items-center text-center sm:items-start sm:text-left">
-                <div className="bg-white w-14 h-14 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                  {IconMap[service.icon] || <Megaphone />}
+            {(data.services || []).map((service) => {
+              const IconComp = IconMap[service.icon] || Megaphone;
+              return (
+                <div key={service.id} className="bg-slate-50 p-6 md:p-10 rounded-[2rem] border border-slate-200 group relative hover:-translate-y-2 transition-all duration-300 hover:shadow-xl flex flex-col items-center text-center sm:items-start sm:text-left">
+                  <div className="bg-white w-14 h-14 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm transition-all duration-300 group-hover:bg-indigo-600 group-hover:text-white">
+                    <IconComp size={24} />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold mb-3 text-slate-900">{service.title}</h3>
+                  <p className="text-slate-600 leading-relaxed text-sm">{service.description}</p>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold mb-3 text-slate-900">{service.title}</h3>
-                <p className="text-slate-600 leading-relaxed text-sm">
-                  {service.description}
-                </p>
-                {isAdmin && (
-                  <button 
-                    onClick={() => {
-                      const newServices = data.services.filter(s => s.id !== service.id);
-                      saveToStorage({ ...data, services: newServices });
-                    }}
-                    className="absolute top-4 right-4 text-red-400 hover:text-red-600 p-2 bg-white rounded-full shadow-sm"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -302,7 +184,6 @@ export default function App() {
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Featured Projects</h2>
             <p className="text-slate-600 text-base md:text-lg">আমরা যেসব ব্র্যান্ডের জন্য সফল ফলাফল নিয়ে এসেছি।</p>
           </div>
-
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
             {(data.projects || []).map((project) => (
               <div key={project.id} className="overflow-hidden rounded-[2rem] md:rounded-[2.5rem] group shadow-lg relative aspect-video bg-slate-200">
@@ -328,7 +209,6 @@ export default function App() {
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Client Stories</h2>
             <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg">আমাদের ক্লায়েন্টদের সন্তুষ্টিই আমাদের প্রধান অনুপ্রেরণা।</p>
           </div>
-          
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {(data.testimonials || []).map((testimonial) => (
               <div key={testimonial.id} className="bg-slate-50 p-6 md:p-10 rounded-[2rem] border border-slate-200 flex flex-col h-full relative group hover:border-indigo-200 transition-colors">
@@ -336,15 +216,7 @@ export default function App() {
                   <Quote size={36} fill="currentColor" className="opacity-10" />
                 </div>
                 <div className="flex-1">
-                  {isAdmin ? (
-                    <textarea 
-                      value={testimonial.feedback}
-                      onChange={(e) => handleUpdateTestimonial(testimonial.id, 'feedback', e.target.value)}
-                      className="w-full bg-white border-2 border-indigo-100 rounded-xl p-3 text-sm focus:border-indigo-500 outline-none h-32"
-                    />
-                  ) : (
-                    <p className="text-slate-700 leading-relaxed italic mb-8 text-sm md:text-base">"{testimonial.feedback}"</p>
-                  )}
+                  <p className="text-slate-700 leading-relaxed italic mb-8 text-sm md:text-base">"{testimonial.feedback}"</p>
                 </div>
                 <div className="flex items-center gap-4 mt-6 pt-6 border-t border-slate-200">
                   <img src={testimonial.avatar} alt={testimonial.name} className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-300 object-cover border-2 border-white shadow-md" />
@@ -364,15 +236,7 @@ export default function App() {
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 md:mb-10 text-slate-900">About Me</h2>
           <div className="text-lg md:text-xl text-slate-600 leading-relaxed space-y-6 font-medium">
-            {isAdmin ? (
-               <textarea 
-               value={data.about?.text || ""} 
-               onChange={(e) => saveToStorage({ ...data, about: { ...data.about, text: e.target.value } })}
-               className="w-full h-40 bg-white border-2 border-indigo-100 p-4 rounded-2xl focus:border-indigo-600 outline-none shadow-sm"
-             />
-            ) : (
-              <p className="px-2">{data.about?.text || ""}</p>
-            )}
+             <p className="px-2">{data.about?.text || ""}</p>
           </div>
         </div>
       </section>
@@ -474,10 +338,7 @@ export default function App() {
                       {formStatus === 'submitting' ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       ) : (
-                        <>
-                          <Send size={18} />
-                          Send Message
-                        </>
+                        <><Send size={18} /> Send Message</>
                       )}
                     </button>
                   </div>
@@ -496,29 +357,8 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Admin Overlay */}
-      {isAdmin && (
-        <div className="fixed bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 glass border-2 border-indigo-500 rounded-2xl p-4 z-[100] flex flex-col md:flex-row justify-between items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-2xl">
-          <div className="flex items-center gap-4">
-            <div className="bg-indigo-600 p-3 rounded-xl text-white shadow-lg shadow-indigo-200">
-              <Sparkles size={24} />
-            </div>
-            <div className="text-left">
-              <p className="font-extrabold text-slate-900 text-sm md:text-base leading-none">Admin Editing Mode</p>
-              <p className="text-[10px] md:text-xs text-slate-500 font-medium mt-1">আপনার পরিবর্তনগুলো অটোমেটিক সেভ হচ্ছে।</p>
-            </div>
-          </div>
-          <button 
-            onClick={() => setIsAdmin(false)}
-            className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 w-full md:w-auto"
-          >
-            Finish Editing
-          </button>
-        </div>
-      )}
-
       {/* AI Chat Widget */}
-      {!isAdmin && <AIChatWidget />}
+      <AIChatWidget />
     </div>
   );
 }
@@ -537,7 +377,6 @@ function AIChatWidget() {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
-    
     try {
       const copy = await generateMarketingCopy(userMsg, "Marketing advice or strategy explanation");
       setMessages(prev => [...prev, { role: 'ai', text: copy || 'I processed your request, but could not generate a response.' }]);
@@ -555,7 +394,6 @@ function AIChatWidget() {
           <div className="bg-indigo-600 p-5 md:p-6 text-white flex justify-between items-center shadow-lg">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
-                {/* Fixed invalid 'md:size' prop by using 'size={20}' only */}
                 <Sparkles size={20} />
               </div>
               <div className="flex flex-col">
@@ -575,7 +413,6 @@ function AIChatWidget() {
             ))}
             {loading && (
               <div className="flex gap-2 items-center text-[10px] md:text-xs text-indigo-500 font-bold animate-pulse px-2">
-                {/* Fixed invalid 'md:size' prop by using 'size={14}' only */}
                 <Sparkles size={14} /> AI is typing...
               </div>
             )}
@@ -593,7 +430,6 @@ function AIChatWidget() {
               disabled={loading}
               className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50 active:scale-90"
             >
-              {/* Fixed invalid 'md:size' prop by using 'size={20}' only */}
               <MessageSquare size={20} />
             </button>
           </div>
@@ -604,7 +440,6 @@ function AIChatWidget() {
           className="bg-indigo-600 text-white w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-[0_15px_30px_rgba(79,70,229,0.3)] hover:scale-110 transition-all hover:bg-indigo-700 active:scale-95 group relative"
         >
           <div className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-green-400 border-4 border-white rounded-full"></div>
-          {/* Fixed invalid 'md:size' prop by using 'size={28}' only */}
           <MessageSquare size={28} />
         </button>
       )}
