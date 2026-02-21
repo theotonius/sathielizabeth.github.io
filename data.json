@@ -7,7 +7,7 @@
   },
   "about": {
     "text": "Over the past 5 years, I've worked with diverse clients globally. My primary focus is to maximize your Return on Investment (ROI) through performance-driven marketing strategies that actually move the needle.",
-    "image": "/images/about-1771685016093-235681867.jpg",
+    "image": "https://media.licdn.com/dms/image/v2/D5603AQGkhp6bBYD2ew/profile-displayphoto-crop_800_800/B56Zwo2P.rHAAI-/0/1770211836751?e=1773273600&v=beta&t=GaY4eauyx1mEPxwyOicOr8nTR-Hb0m4gPOYr2R2l3_s",
     "experience": "5+ Years of Digital Marketing Excellence",
     "skills": [
       "Google Ads",
@@ -103,20 +103,6 @@
       "category": "Social Media",
       "image": "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80",
       "result": "250% Engagement Boost"
-    },
-    {
-      "id": "1771686172856",
-      "title": "New Project",
-      "category": "Category",
-      "image": "",
-      "result": "Project result"
-    },
-    {
-      "id": "1771686172896",
-      "title": "New Project",
-      "category": "Category",
-      "image": "",
-      "result": "Project result"
     }
   ],
   "testimonials": [
@@ -140,13 +126,6 @@
       "role": "Founder, EcoStore",
       "feedback": "Strategic, professional, and results-oriented. The lead generation campaign surpassed all our expectations. Tanvir is a true partner in our growth.",
       "avatar": "https://i.pravatar.cc/150?u=elena"
-    },
-    {
-      "id": "1771686283055",
-      "name": "Sobuj Theotonius",
-      "role": "CEO, Darktheo Technologies",
-      "feedback": "She really expert in digital marketing. I appriciate her work",
-      "avatar": ""
     }
   ]
 }

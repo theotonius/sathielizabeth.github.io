@@ -2,8 +2,8 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import fs from "fs";
 import path from "path";
+import bodyParser from "body-parser";
 import cors from "cors";
-import multer from "multer";
 
 async function startServer() {
   const app = express();
@@ -11,9 +11,9 @@ async function startServer() {
   const DATA_FILE = path.join(process.cwd(), "data.json");
 
   app.use(cors());
-  app.use(express.json());
-  app.use("/images", express.static(path.join(process.cwd(), "images")));
+  app.use(bodyParser.json());
 
+  // API to get site data
   app.get("/api/data", (req, res) => {
     try {
       const data = fs.readFileSync(DATA_FILE, "utf-8");
@@ -23,6 +23,7 @@ async function startServer() {
     }
   });
 
+  // API to update site data
   app.post("/api/data", (req, res) => {
     try {
       const newData = req.body;
@@ -33,8 +34,11 @@ async function startServer() {
     }
   });
 
+  // Simple Login API
   app.post("/api/login", (req, res) => {
     const { username, password } = req.body;
+    // For demo purposes, using hardcoded credentials. 
+    // In a real app, use environment variables and hashed passwords.
     if (username === "admin" && password === "admin123") {
       res.json({ success: true, token: "demo-token-123" });
     } else {
@@ -42,46 +46,7 @@ async function startServer() {
     }
   });
 
-  const uploadDir = path.join(process.cwd(), "images");
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-  
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-      cb(null, "about-" + uniqueSuffix + path.extname(file.originalname));
-    }
-  });
-  
-  const upload = multer({ 
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-      const allowedTypes = /jpeg|jpg|png|webp|gif/;
-      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-      const mimetype = allowedTypes.test(file.mimetype);
-      if (extname && mimetype) {
-        cb(null, true);
-      } else {
-        cb(new Error("Only image files are allowed"));
-      }
-    }
-  });
-
-  app.post("/api/upload", upload.single("image"), (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-      }
-      const imageUrl = `/images/${req.file.filename}`;
-      res.json({ success: true, url: imageUrl });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to upload image" });
-    }
-  });
-
+  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
