@@ -545,6 +545,24 @@ function AdminPanel({ data, onSave }: { data: SiteData, onSave: (data: SiteData)
           <section className="space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Hero Section</h3>
             <div className="grid gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Name</label>
+                  <input 
+                    value={editData.hero?.name} 
+                    onChange={e => setEditData({...editData, hero: {...editData.hero!, name: e.target.value}})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">CTA Button Text</label>
+                  <input 
+                    value={editData.hero?.cta} 
+                    onChange={e => setEditData({...editData, hero: {...editData.hero!, cta: e.target.value}})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
               <div>
                 <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Title</label>
                 <input 
@@ -567,22 +585,84 @@ function AdminPanel({ data, onSave }: { data: SiteData, onSave: (data: SiteData)
           {/* About Section */}
           <section className="space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">About Section</h3>
-            <div className="grid gap-4">
-              <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">About Text</label>
-                <textarea 
-                  value={editData.about?.text} 
-                  onChange={e => setEditData({...editData, about: {...editData.about!, text: e.target.value}})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none h-32"
-                />
+            <div className="grid lg:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">About Text</label>
+                  <textarea 
+                    value={editData.about?.text} 
+                    onChange={e => setEditData({...editData, about: {...editData.about!, text: e.target.value}})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none h-32"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Experience Label</label>
+                  <input 
+                    value={editData.about?.experience} 
+                    onChange={e => setEditData({...editData, about: {...editData.about!, experience: e.target.value}})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">USP (Unique Selling Point)</label>
+                  <textarea 
+                    value={editData.about?.usp} 
+                    onChange={e => setEditData({...editData, about: {...editData.about!, usp: e.target.value}})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none h-24"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Image URL</label>
-                <input 
-                  value={editData.about?.image} 
-                  onChange={e => setEditData({...editData, about: {...editData.about!, image: e.target.value}})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none"
-                />
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Image URL</label>
+                  <input 
+                    value={editData.about?.image} 
+                    onChange={e => setEditData({...editData, about: {...editData.about!, image: e.target.value}})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none mb-2"
+                  />
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 aspect-video bg-slate-100 relative group">
+                    <img 
+                      src={editData.about?.image} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.currentTarget.src = "https://picsum.photos/seed/error/800/600")}
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white text-xs font-bold">Image Preview</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <label className="text-[10px] font-bold uppercase text-slate-400 ml-1 mb-2 block">Statistics</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {editData.about?.stats?.map((stat, idx) => (
+                  <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                    <input 
+                      value={stat.label} 
+                      onChange={e => {
+                        const newStats = [...editData.about!.stats!];
+                        newStats[idx].label = e.target.value;
+                        setEditData({...editData, about: {...editData.about!, stats: newStats}});
+                      }}
+                      placeholder="Label"
+                      className="w-full bg-white border border-slate-100 rounded-lg px-2 py-1 text-[10px] font-bold outline-none"
+                    />
+                    <input 
+                      value={stat.value} 
+                      onChange={e => {
+                        const newStats = [...editData.about!.stats!];
+                        newStats[idx].value = e.target.value;
+                        setEditData({...editData, about: {...editData.about!, stats: newStats}});
+                      }}
+                      placeholder="Value"
+                      className="w-full bg-white border border-slate-100 rounded-lg px-2 py-1 text-xs outline-none"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </section>
