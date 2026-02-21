@@ -4,8 +4,10 @@ import {
   Menu, X, Facebook, Instagram, Linkedin, Twitter, 
   Sparkles, TrendingUp,
   Globe, Mail, BarChart, Target, Users, ShoppingBag, Quote, MessageSquare, Megaphone, Search, PenTool, Send, CheckCircle,
-  Zap, Award, Smile, Star, Layout, FileText, Phone, MapPin, Camera, Video, Smartphone, Laptop, Cpu, Layers, PieChart
+  Zap, Award, Smile, Star, Layout, FileText, Phone, MapPin, Camera, Video, Smartphone, Laptop, Cpu, Layers, PieChart,
+  ChevronUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { INITIAL_DATA, MOCK_CHART_DATA } from './constants';
 import { SiteData, Service, Project, Testimonial } from './types';
@@ -105,17 +107,41 @@ export default function App() {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem('marketpro_data');
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved);
-      if (parsed && typeof parsed === 'object') {
-        setData(prev => ({ ...INITIAL_DATA, ...parsed }));
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/data');
+        if (response.ok) {
+          const result = await response.json();
+          setData(result);
+        }
+      } catch (error) {
+        console.error("Failed to fetch data from server", error);
+        // Fallback to localStorage if server fails
+        const saved = localStorage.getItem('marketpro_data');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            setData(prev => ({ ...INITIAL_DATA, ...parsed }));
+          } catch (e) {}
+        }
       }
-    } catch (e) {
-      console.error("Critical error loading saved data.", e);
-    }
+    };
+    fetchData();
   }, []);
+
+  const updateData = async (newData: SiteData) => {
+    setData(newData);
+    try {
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newData),
+      });
+      localStorage.setItem('marketpro_data', JSON.stringify(newData));
+    } catch (error) {
+      console.error("Failed to save data to server", error);
+    }
+  };
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,10 +188,10 @@ export default function App() {
               {data.hero?.description || ""}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <button className="bg-indigo-600 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
+              <a href="#contact" className="bg-indigo-600 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
                 {data.hero?.cta || "Get Started"}
                 <TrendingUp size={20} />
-              </button>
+              </a>
             </div>
           </div>
           
@@ -254,31 +280,14 @@ export default function App() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-16 md:py-32 px-4 bg-white border-b border-slate-100">
+      <section id="testimonials" className="py-16 md:py-32 px-4 bg-white border-b border-slate-100 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-20">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Client Stories</h2>
             <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg">Our clients' satisfaction is our main inspiration.</p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {(data.testimonials || []).map((testimonial) => (
-              <div key={testimonial.id} className="bg-slate-50 p-6 md:p-10 rounded-[2rem] border border-slate-200 flex flex-col h-full relative group hover:border-indigo-200 transition-colors">
-                <div className="text-indigo-600 mb-6">
-                  <Quote size={36} fill="currentColor" className="opacity-10" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-slate-700 leading-relaxed italic mb-8 text-sm md:text-base">"{testimonial.feedback}"</p>
-                </div>
-                <div className="flex items-center gap-4 mt-6 pt-6 border-t border-slate-200">
-                  <img src={testimonial.avatar} alt={testimonial.name} className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-300 object-cover border-2 border-white shadow-md" />
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{testimonial.name}</h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          
+          <TestimonialSlider testimonials={data.testimonials || []} />
         </div>
       </section>
 
@@ -289,11 +298,11 @@ export default function App() {
             <div className="relative order-2 lg:order-1">
               <div className="absolute -top-6 -left-6 w-24 h-24 bg-indigo-100 rounded-2xl -z-10"></div>
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-100 rounded-full -z-10"></div>
-              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
+              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white bg-slate-50">
                 <img 
                   src={data.about?.image} 
                   alt="Professional Portrait" 
-                  className="w-full aspect-[4/5] object-cover"
+                  className="w-full aspect-square md:aspect-[4/5] object-cover object-top"
                 />
               </div>
               <div className="absolute bottom-10 -left-10 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 hidden md:block">
@@ -356,11 +365,11 @@ export default function App() {
             Discuss your growth strategy today. We are ready to give you the right guidance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center items-center">
-            <button className="bg-white text-indigo-600 px-10 py-4 md:py-5 rounded-full font-bold text-base md:text-lg hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95 shadow-xl w-full sm:w-auto">
+            <a href="#contact" className="bg-white text-indigo-600 px-10 py-4 md:py-5 rounded-full font-bold text-base md:text-lg hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95 shadow-xl w-full sm:w-auto text-center">
               Book Strategy Call
-            </button>
+            </a>
             <a 
-              href="https://wa.me/8801700000000" 
+              href="https://wa.me/+8801736590876" 
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-transparent border-2 border-indigo-400 text-white px-10 py-4 md:py-5 rounded-full font-bold text-base md:text-lg hover:bg-white/10 transition-all active:scale-95 w-full sm:w-auto text-center"
@@ -372,7 +381,7 @@ export default function App() {
       </section>
 
       {/* Footer & Contact Form */}
-      <footer className="pt-16 pb-8 md:pt-24 md:pb-12 px-4 bg-slate-900 text-slate-400">
+      <footer id="contact" className="pt-16 pb-8 md:pt-24 md:pb-12 px-4 bg-slate-900 text-slate-400">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
             <div className="space-y-6 text-center md:text-left">
@@ -482,7 +491,398 @@ export default function App() {
 
       {/* WhatsApp Widget */}
       <WhatsAppWidget />
+      
+      {/* Scroll To Top Button */}
+      <ScrollToTop />
+
+      {/* Admin Panel Toggle (Simple secret: add ?admin=true to URL) */}
+      {window.location.search.includes('admin=true') && (
+        <AdminPanel data={data} onSave={updateData} />
+      )}
     </div>
+  );
+}
+
+function AdminPanel({ data, onSave }: { data: SiteData, onSave: (data: SiteData) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [editData, setEditData] = useState(data);
+
+  useEffect(() => {
+    setEditData(data);
+  }, [data]);
+
+  const handleSave = () => {
+    onSave(editData);
+    setIsOpen(false);
+    alert("Site updated successfully!");
+  };
+
+  if (!isOpen) {
+    return (
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-4 left-4 z-[200] bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl border border-slate-700 hover:bg-slate-800 transition-all flex items-center gap-2"
+      >
+        <PenTool size={14} /> Admin Panel
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Layout className="text-indigo-600" /> Site Editor
+          </h2>
+          <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-8 space-y-10">
+          {/* Hero Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Hero Section</h3>
+            <div className="grid gap-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Title</label>
+                <input 
+                  value={editData.hero?.title} 
+                  onChange={e => setEditData({...editData, hero: {...editData.hero!, title: e.target.value}})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Description</label>
+                <textarea 
+                  value={editData.hero?.description} 
+                  onChange={e => setEditData({...editData, hero: {...editData.hero!, description: e.target.value}})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none h-24"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* About Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">About Section</h3>
+            <div className="grid gap-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">About Text</label>
+                <textarea 
+                  value={editData.about?.text} 
+                  onChange={e => setEditData({...editData, about: {...editData.about!, text: e.target.value}})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none h-32"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Image URL</label>
+                <input 
+                  value={editData.about?.image} 
+                  onChange={e => setEditData({...editData, about: {...editData.about!, image: e.target.value}})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 ring-indigo-500 outline-none"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Services Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Services</h3>
+            <div className="grid gap-6">
+              {editData.services?.map((service, idx) => (
+                <div key={service.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400">Service #{idx + 1}</span>
+                  </div>
+                  <input 
+                    value={service.title} 
+                    onChange={e => {
+                      const newServices = [...editData.services!];
+                      newServices[idx].title = e.target.value;
+                      setEditData({...editData, services: newServices});
+                    }}
+                    placeholder="Title"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                  />
+                  <textarea 
+                    value={service.description} 
+                    onChange={e => {
+                      const newServices = [...editData.services!];
+                      newServices[idx].description = e.target.value;
+                      setEditData({...editData, services: newServices});
+                    }}
+                    placeholder="Description"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none h-20"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Projects Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Projects</h3>
+            <div className="grid gap-6">
+              {editData.projects?.map((project, idx) => (
+                <div key={project.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400">Project #{idx + 1}</span>
+                  </div>
+                  <input 
+                    value={project.title} 
+                    onChange={e => {
+                      const newProjects = [...editData.projects!];
+                      newProjects[idx].title = e.target.value;
+                      setEditData({...editData, projects: newProjects});
+                    }}
+                    placeholder="Project Title"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                  />
+                  <input 
+                    value={project.result} 
+                    onChange={e => {
+                      const newProjects = [...editData.projects!];
+                      newProjects[idx].result = e.target.value;
+                      setEditData({...editData, projects: newProjects});
+                    }}
+                    placeholder="Result (e.g. 5X Growth)"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                  />
+                  <input 
+                    value={project.image} 
+                    onChange={e => {
+                      const newProjects = [...editData.projects!];
+                      newProjects[idx].image = e.target.value;
+                      setEditData({...editData, projects: newProjects});
+                    }}
+                    placeholder="Image URL"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Testimonials Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Testimonials</h3>
+            <div className="grid gap-6">
+              {editData.testimonials?.map((testimonial, idx) => (
+                <div key={testimonial.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400">Testimonial #{idx + 1}</span>
+                  </div>
+                  <input 
+                    value={testimonial.name} 
+                    onChange={e => {
+                      const newTestimonials = [...editData.testimonials!];
+                      newTestimonials[idx].name = e.target.value;
+                      setEditData({...editData, testimonials: newTestimonials});
+                    }}
+                    placeholder="Client Name"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                  />
+                  <input 
+                    value={testimonial.role} 
+                    onChange={e => {
+                      const newTestimonials = [...editData.testimonials!];
+                      newTestimonials[idx].role = e.target.value;
+                      setEditData({...editData, testimonials: newTestimonials});
+                    }}
+                    placeholder="Client Role"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                  />
+                  <textarea 
+                    value={testimonial.feedback} 
+                    onChange={e => {
+                      const newTestimonials = [...editData.testimonials!];
+                      newTestimonials[idx].feedback = e.target.value;
+                      setEditData({...editData, testimonials: newTestimonials});
+                    }}
+                    placeholder="Feedback"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none h-20"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-4">
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="px-6 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleSave}
+            className="bg-indigo-600 text-white px-8 py-2 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TestimonialSlider({ testimonials }: { testimonials: Testimonial[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      nextSlide();
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [currentIndex]);
+
+  const nextSlide = () => {
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevSlide = () => {
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0
+    })
+  };
+
+  if (!testimonials.length) return null;
+
+  return (
+    <div className="relative px-4 md:px-12">
+      <div className="relative h-[400px] md:h-[350px] flex items-center justify-center">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            className="absolute w-full max-w-4xl"
+          >
+            <div className="bg-slate-50 p-8 md:p-12 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 text-indigo-600/5">
+                <Quote size={120} fill="currentColor" />
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={16} className="text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                
+                <p className="text-lg md:text-xl text-slate-700 leading-relaxed italic mb-10 font-medium">
+                  "{testimonials[currentIndex].feedback}"
+                </p>
+                
+                <div className="flex items-center gap-5">
+                  <img 
+                    src={testimonials[currentIndex].avatar} 
+                    alt={testimonials[currentIndex].name} 
+                    className="w-14 h-14 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover" 
+                  />
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-base md:text-lg">{testimonials[currentIndex].name}</h4>
+                    <p className="text-xs text-indigo-600 uppercase tracking-widest font-bold">{testimonials[currentIndex].role}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-center gap-4 mt-8">
+        <button 
+          onClick={prevSlide}
+          className="p-3 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <div className="flex items-center gap-2">
+          {testimonials.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setDirection(i > currentIndex ? 1 : -1);
+                setCurrentIndex(i);
+              }}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentIndex ? 'w-8 bg-indigo-600' : 'bg-slate-300'}`}
+            />
+          ))}
+        </div>
+        <button 
+          onClick={nextSlide}
+          className="p-3 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm active:scale-90"
+        >
+          <ChevronRight size={24} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScrollToTop() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
+  return (
+    <button
+      onClick={scrollToTop}
+      className={`fixed bottom-20 right-4 md:bottom-28 md:right-8 z-[190] bg-white text-indigo-600 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg border border-slate-100 transition-all duration-300 hover:scale-110 active:scale-95 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+      }`}
+      aria-label="Scroll to top"
+    >
+      <ChevronUp size={24} />
+    </button>
   );
 }
 
