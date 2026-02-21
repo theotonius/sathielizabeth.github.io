@@ -31,6 +31,10 @@ export interface SiteData {
   };
   about: {
     text: string;
+    image: string;
+    experience: string;
+    skills: string[];
+    usp: string;
     stats: { label: string; value: string }[];
   };
   services: Service[];

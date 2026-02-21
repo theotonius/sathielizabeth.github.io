@@ -157,7 +157,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-20">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Expert Services</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg font-medium px-4">আপনার ব্যবসার উন্নতির জন্য বিশেষায়িত ডিজিটাল মার্কেটিং সেবাসমূহ।</p>
+            <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg font-medium px-4">Specialized digital marketing services to help your business grow.</p>
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -182,7 +182,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 md:mb-16 text-center md:text-left">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Featured Projects</h2>
-            <p className="text-slate-600 text-base md:text-lg">আমরা যেসব ব্র্যান্ডের জন্য সফল ফলাফল নিয়ে এসেছি।</p>
+            <p className="text-slate-600 text-base md:text-lg">We bring successful results for the brands we work with.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
             {(data.projects || []).map((project) => (
@@ -207,7 +207,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-20">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Client Stories</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg">আমাদের ক্লায়েন্টদের সন্তুষ্টিই আমাদের প্রধান অনুপ্রেরণা।</p>
+            <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg">Our clients' satisfaction is our main inspiration.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {(data.testimonials || []).map((testimonial) => (
@@ -232,11 +232,66 @@ export default function App() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 md:py-32 px-4 bg-slate-50">
-        <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 md:mb-10 text-slate-900">About Me</h2>
-          <div className="text-lg md:text-xl text-slate-600 leading-relaxed space-y-6 font-medium">
-             <p className="px-2">{data.about?.text || ""}</p>
+      <section id="about" className="py-20 md:py-32 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="relative order-2 lg:order-1">
+              <div className="absolute -top-6 -left-6 w-24 h-24 bg-indigo-100 rounded-2xl -z-10"></div>
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-100 rounded-full -z-10"></div>
+              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
+                <img 
+                  src={data.about?.image} 
+                  alt="Professional Portrait" 
+                  className="w-full aspect-[4/5] object-cover"
+                />
+              </div>
+              <div className="absolute bottom-10 -left-10 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 hidden md:block">
+                <div className="flex items-center gap-4">
+                  <div className="bg-green-100 text-green-600 p-3 rounded-xl">
+                    <Award size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Experience</p>
+                    <p className="text-lg font-bold text-slate-900">{data.about?.experience}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-8 order-1 lg:order-2">
+              <div className="space-y-4">
+                <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight">
+                  Crafting Digital <span className="text-indigo-600">Success Stories</span>
+                </h2>
+                <p className="text-lg text-slate-600 leading-relaxed font-medium">
+                  {data.about?.text}
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 text-indigo-100 group-hover:text-indigo-200 transition-colors">
+                  <Zap size={48} />
+                </div>
+                <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <Star size={16} /> Unique Selling Proposition
+                </h3>
+                <p className="text-slate-800 font-bold text-lg md:text-xl leading-snug relative z-10">
+                  "{data.about?.usp}"
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Core Expertise</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {(data.about?.skills || []).map((skill, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm hover:border-indigo-300 transition-colors">
+                      <CheckCircle size={14} className="text-indigo-500" />
+                      <span className="text-xs md:text-sm font-bold text-slate-700">{skill}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -247,7 +302,7 @@ export default function App() {
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-6">Let's Scale Your Business</h2>
           <p className="text-lg md:text-xl text-indigo-100 mb-8 md:mb-12 max-w-2xl mx-auto">
-            আপনার গ্রোথ স্ট্রেটেজি নিয়ে আজই আলোচনা করুন। আমরা আপনাকে সঠিক দিকনির্দেশনা দিতে প্রস্তুত।
+            Discuss your growth strategy today. We are ready to give you the right guidance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center items-center">
             <button className="bg-white text-indigo-600 px-10 py-4 md:py-5 rounded-full font-bold text-base md:text-lg hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95 shadow-xl w-full sm:w-auto">
@@ -270,7 +325,7 @@ export default function App() {
                 <span className="text-2xl font-bold tracking-tight">MarketPro</span>
               </div>
               <p className="text-sm leading-relaxed max-w-sm mx-auto md:mx-0">
-                আপনার বিশ্বস্ত ডিজিটাল মার্কেটিং পার্টনার। আমরা ডেটা এবং সঠিক পরিকল্পনার মাধ্যমে আপনার ব্যবসাকে বড় করতে সাহায্য করি।
+                Your trusted digital marketing partner. We help grow your business through data and proper planning.
               </p>
               <div className="flex gap-4 justify-center md:justify-start">
                 <a href="#" className="bg-slate-800 p-3 rounded-xl hover:text-white hover:bg-indigo-600 transition-all"><Facebook size={20} /></a>
@@ -298,7 +353,7 @@ export default function App() {
                     <CheckCircle size={24} />
                   </div>
                   <h5 className="text-white font-bold mb-2">Message Received!</h5>
-                  <p className="text-sm">আমরা খুব শীঘ্রই আপনার সাথে যোগাযোগ করবো।</p>
+                  <p className="text-sm">We will contact you very soon.</p>
                 </div>
               ) : (
                 <form onSubmit={handleContactSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -366,7 +421,7 @@ export default function App() {
 function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-    { role: 'ai', text: "হ্যালো! আমি তানভীরের AI অ্যাসিস্ট্যান্ট। আমি আপনাকে ডিজিটাল মার্কেটিং নিয়ে কীভাবে সাহায্য করতে পারি?" }
+    { role: 'ai', text: "Hello! I am Tanvir's AI Assistant. How can I help you with digital marketing?" }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

@@ -10,6 +10,10 @@ export const INITIAL_DATA: SiteData = {
   },
   about: {
     text: "Over the past 5 years, I've worked with diverse clients globally. My primary focus is to maximize your Return on Investment (ROI) through performance-driven marketing strategies that actually move the needle.",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
+    experience: "5+ Years of Digital Marketing Excellence",
+    skills: ["Google Ads", "Facebook Meta Ads", "SEO Optimization", "Content Strategy", "Email Automation", "Data Analytics"],
+    usp: "I don't just run ads; I build high-converting ecosystems that turn clicks into loyal customers using advanced psychological triggers and data-backed insights.",
     stats: [
       { label: "Successful Projects", value: "150+" },
       { label: "Ad Spend Managed", value: "$500k+" },
